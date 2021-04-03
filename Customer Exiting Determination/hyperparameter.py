@@ -5,6 +5,8 @@ Created on Wed Mar 24 01:11:25 2021
 @author: souha
 """
 
+# Using K-Fold Cross Validation
+
 import pandas as pd
 
 # Loading the dataset
@@ -34,13 +36,15 @@ X_test = sc.transform(X_test)
 
 import keras
 from keras.wrappers.scikit_learn import KerasClassifier
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, cross_val_score
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Embedding, Flatten, LeakyReLU, BatchNormalization, Dropout
 from keras.activations import relu, sigmoid
 
-def create_model(layers, activation):
+# For Grid Search
+
+def create_model(layers, activation, optimizer):
     # Initialing the model
     model = Sequential()
     
@@ -56,18 +60,42 @@ def create_model(layers, activation):
     # Output Layer
     model.add(Dense(units=1, kernel_initializer='glorot_uniform', activation='sigmoid'))
         
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
     
     return model
 
+# KerasClassifier is a wrapper of k-fold Cross Validation
 model = KerasClassifier(build_fn=create_model, verbose=2)
 
-# defining parameters
+# defining parameters for Grid Search
 layers = [(20,), (40,20), (45,30,15),(6,6,1)]
 activations = ['sigmoid', 'relu']
-param_grid = dict(layers=layers, activation=activations, batch_size=[128, 256], epochs=[30])
-grid = GridSearchCV(estimator=model, param_grid=param_grid, cv=5)
+optimizers = [keras.optimizers.Adam(), keras.optimizers.RMSprop()]
+# optimizers = ['adam', 'rmsprop']
+param_grid = dict(
+    layers=layers, 
+    activation=activations, 
+    optimizer = optimizers, 
+    batch_size=[128, 256, 25, 32], 
+    epochs=[30,100,500]
+    )
+grid = GridSearchCV(estimator=model, param_grid=param_grid, scoring = 'accuracy', cv=10)
 
 grid_result = grid.fit(X_train, y_train)
-        
 [grid_result.best_score_,grid_result.best_params_]
+
+
+
+# Using Cross Validation Score
+# def build_classifier():
+#     classifier = Sequential()
+#     classifier.add(Dense(units=6, activation="relu", kernel_initializer="he_uniform", input_dim = 11))
+#     classifier.add(Dense(units = 6, kernel_initializer = 'he_uniform',activation='relu'))
+#     classifier.add(Dense(units = 1, kernel_initializer = 'glorot_uniform', activation = 'sigmoid'))
+#     classifier.compile(optimizer='adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+#     return classifier    
+
+# model = KerasClassifier(build_fn=build_classifier, batch_size = 10, epochs=100)
+# cvs = cross_val_score(estimator= model, X=X_train, y=y_train, cv=10, verbose=2)
+
+        

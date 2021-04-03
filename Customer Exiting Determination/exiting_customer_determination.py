@@ -28,7 +28,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 from sklearn.preprocessing import StandardScaler
 sc = StandardScaler()
 X_train = sc.fit_transform(X_train )
-X_test = sc.fit_transform(X_test)
+X_test = sc.transform(X_test)
 
 
 # Building the ANN
@@ -43,6 +43,8 @@ classifier = Sequential()
 
 # Adding first hidden layer and input layer
 classifier.add(Dense(units=6, activation="relu", kernel_initializer="he_uniform", input_dim = 11))
+# For adding Dropout
+# classifier.add(Dropout(rate=0.1))
 
 # Adding the second hidden layer
 classifier.add(Dense(units = 6, kernel_initializer = 'he_uniform',activation='relu'))
@@ -81,6 +83,9 @@ plt.show()
 # Predicting the Test set results
 y_pred = classifier.predict(X_test)
 y_pred = (y_pred > 0.5)
+
+# Predicting on custom value
+new_prediction = classifier.p
 
 # Making the Confusion Matrix
 from sklearn.metrics import confusion_matrix
